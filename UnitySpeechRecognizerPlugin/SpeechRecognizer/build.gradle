@@ -1,0 +1,53 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        minSdkVersion 24
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        targetCompatibility 1.8
+        sourceCompatibility 1.8
+    }
+}
+
+dependencies {
+    implementation 'com.android.support:support-annotations:28.0.0'
+    implementation 'com.android.support:support-compat:28.0.0'
+    compileOnly files('./libs/classes.jar') // Avoid redundant Unity Player in final application APK
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+android.libraryVariants.all { variant ->
+    // Task names.
+    String variantName = "${variant.name.capitalize()}"; // Like 'Debug'
+    String deployTaskGroup = "plugin";
+    String deployTaskName = "deploy${variantName}PluginArchive"; // Like 'deployDebugPluginArchive'
+    String dependencyTaskName = "assemble${variantName}"; // Like 'assembleDebug'
+    // Source.
+    String sourceAARFolder = "${buildDir.getPath()}/outputs/aar/";
+    String sourceAARName = "${project.name}-${variant.name}.aar";
+    // Target.
+    String targetAssetFolder = "\\UnitySpeechRecognizer\\Assets\\Plugins\\SpeechRecognizer\\Android";
+    String targetAARFolder = "${rootDir.getPath()}/../${targetAssetFolder}"; // Navigate into 'Assets'
+    String targetAARName = "UnitySpeechRecognizer.aar"; // The form you ship your plugin
+    // Create task.
+    task(deployTaskName, dependsOn: dependencyTaskName, type: Copy) {
+        from(sourceAARFolder)
+        into(targetAARFolder)
+        include(sourceAARName)
+        rename(sourceAARName, targetAARName)
+    }.group = deployTaskGroup;
+}
